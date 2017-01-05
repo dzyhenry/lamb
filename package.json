@@ -1,0 +1,39 @@
+{
+  "name": "lamb",
+  "version": "1.0.0",
+  "description": "A simple Promise implementation for learning Promise.",
+  "main": "lamb.js",
+  "devDependencies": {
+    "eslint": "^3.12.2",
+    "eslint-config-airbnb": "^13.0.0",
+    "eslint-plugin-import": "^2.2.0",
+    "eslint-plugin-jsx-a11y": "^2.2.3",
+    "eslint-plugin-react": "^6.8.0",
+    "promises-aplus-tests": "^2.1.2"
+  },
+  "engines": {
+    "node" : ">=6.0.0"
+  },
+  "scripts": {
+    "test": "node ./test/promiseAPlusTest",
+    "lint": "./node_modules/.bin/eslint . --fix && echo 'Eslint Passed\\n'"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dzyhenry/lamb.git"
+  },
+  "keywords": [
+    "lamb",
+    "promise",
+    "es6"
+  ],
+  "author": "dzyhenry",
+  "directories": {
+    "test": "test"
+  },
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/dzyhenry/lamb/issues"
+  },
+  "homepage": "https://github.com/dzyhenry/lamb#readme"
+}
