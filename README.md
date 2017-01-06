@@ -190,6 +190,7 @@ const resolve = (promise, x) => {
   }
 ```
 
-# Reference
+# References
 - [Promise/A+](https://promisesaplus.com)
 - [How to write a Promise/A+ compatible library](https://abdulapopoola.com/2015/02/23/how-to-write-a-promisea-compatible-library/)
+- [unhandled-promises](https://trackjs.com/blog/unhandled-promises/)
