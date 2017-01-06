@@ -3,7 +3,7 @@
          title="Promises/A+ 1.0 compliant" align="right" />
 </a>
 
-# Lamb
+# Lamb ![npm](https://travis-ci.org/dzyhenry/lamb.svg?branch=master)
 A promise library in ES6 for learning [Promise/A+ Specification](https://promisesaplus.com/).
 
 - 模仿了[Adehun](https://github.com/abdulapopoola/Adehun)的实现
