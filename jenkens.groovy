@@ -1,5 +1,5 @@
 node {
   stage('test') {
-    sh "hello test"
+    sh "npm run test"
   }
 }
