@@ -1,3 +1,5 @@
-stage('test') {
-  sh "hello test"
+node {
+  stage('test') {
+    sh "hello test"
+  }
 }
