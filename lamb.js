@@ -19,47 +19,6 @@ const Utils = {
     (state || VALIDATE_STATE.REJECTED),
 };
 
-const resolve = (promise, x) => {
-  if (x === promise) {
-    promise.transition(VALIDATE_STATE.REJECTED, new TypeError('The promise and its value refer to the same object.'));
-  } else if (Utils.isPromise(x)) {
-    if (x.state === VALIDATE_STATE.PENDING) {
-      x.then(value => resolve(promise, value), reason => promise.transition(VALIDATE_STATE.REJECTED, reason));
-    } else {
-      promise.transition(x.state, x.value);
-    }
-  } else if (Utils.isObject(x) || Utils.isFunction(x)) {
-    let then = null;
-    let isCalled = false;
-    try {
-      then = x.then;
-      if (Utils.isFunction(then)) {
-        then.call(x, (value) => {
-          if (!isCalled) {
-            resolve(promise, value);
-            isCalled = true;
-          }
-        }, (reason) => {
-          if (!isCalled) {
-            promise.reject(reason);
-            isCalled = true;
-          }
-        });
-      } else {
-        promise.fulfill(x);
-        isCalled = true;
-      }
-    } catch (e) {
-      if (!isCalled) {
-        promise.reject(e);
-        isCalled = true;
-      }
-    }
-  } else {
-    promise.fulfill(x);
-  }
-};
-
 class Lamb {
   constructor(fn) {
     this.queue = [];
@@ -68,12 +27,11 @@ class Lamb {
       onFulfilled: null,
       onRejected: null,
     };
-    const that = this;
     if (fn) {
       fn((value) => {
-        resolve(that, value);
+        this.resolve.call(this, value);
       }, (reason) => {
-        that.reject(reason);
+        this.reject(reason);
       });
     }
   }
@@ -95,27 +53,26 @@ class Lamb {
     if (this.state === VALIDATE_STATE.PENDING) {
       return;
     }
-    const that = this;
 
     // 2.2.4 onFulfilled or onRejected must not be called until the execution context stack contains only platform code.
     Utils.runAsync(() => {
-      while (that.queue && that.queue.length) {
-        const queuedPromise = that.queue.shift();
+      while (this.queue && this.queue.length) {
+        const queuedPromise = this.queue.shift();
         let handler = null;
         let value = null;
-        if (that.state === VALIDATE_STATE.FULFILLED) {
+        if (this.state === VALIDATE_STATE.FULFILLED) {
           handler = queuedPromise.handlers.onFulfilled || Utils.defaultFulfillCallback;
-        } else if (that.state === VALIDATE_STATE.REJECTED) {
+        } else if (this.state === VALIDATE_STATE.REJECTED) {
           handler = queuedPromise.handlers.onRejected || Utils.defaultRejectCallback;
         }
 
         try {
-          value = handler(that.value);
+          value = handler(this.value);
         } catch (e) {
           queuedPromise.transition(VALIDATE_STATE.REJECTED, e);
           continue;
         }
-        resolve(queuedPromise, value);
+        this.resolve.call(queuedPromise, value);
       }
     });
   }
@@ -132,6 +89,47 @@ class Lamb {
 
   reject(reason) {
     this.transition(VALIDATE_STATE.REJECTED, reason);
+  }
+
+  resolve(x) {
+    if (x === this) {
+      this.transition(VALIDATE_STATE.REJECTED, new TypeError('The promise and its value refer to the same object.'));
+    } else if (Utils.isPromise(x)) {
+      if (x.state === VALIDATE_STATE.PENDING) {
+        x.then(value => this.resolve(value), reason => this.transition(VALIDATE_STATE.REJECTED, reason));
+      } else {
+        this.transition(x.state, x.value);
+      }
+    } else if (Utils.isObject(x) || Utils.isFunction(x)) {
+      let then = null;
+      let isCalled = false;
+      try {
+        then = x.then;
+        if (Utils.isFunction(then)) {
+          then.call(x, (value) => {
+            if (!isCalled) {
+              this.resolve(value);
+              isCalled = true;
+            }
+          }, (reason) => {
+            if (!isCalled) {
+              this.reject(reason);
+              isCalled = true;
+            }
+          });
+        } else {
+          this.fulfill(x);
+          isCalled = true;
+        }
+      } catch (e) {
+        if (!isCalled) {
+          this.reject(e);
+          isCalled = true;
+        }
+      }
+    } else {
+      this.fulfill(x);
+    }
   }
 
   fulfill(value) {
