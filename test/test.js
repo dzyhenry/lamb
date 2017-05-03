@@ -39,6 +39,9 @@ const p = new Promise((resolve, reject) => {
       resolve(data + 10);
     }, 100);
   });
+}, (reason) => {
+  console.log('rejected reson: ', reason);
+  return 100000;
 }).then((data) => {
   console.log(data);
 });

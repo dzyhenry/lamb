@@ -123,6 +123,47 @@ class Lamb {
     this.transition(VALIDATE_STATE.REJECTED, reason);
   }
 
+  resolve(x) {
+    if (x === this) {
+      this.transition(VALIDATE_STATE.REJECTED, new TypeError('The promise and its value refer to the same object.'));
+    } else if (Utils.isPromise(x)) {
+      if (x.state === VALIDATE_STATE.PENDING) {
+        x.then(value => this.resolve(value), reason => this.transition(VALIDATE_STATE.REJECTED, reason));
+      } else {
+        this.transition(x.state, x.value);
+      }
+    } else if (Utils.isObject(x) || Utils.isFunction(x)) {
+      let then = null;
+      let isCalled = false;
+      try {
+        then = x.then;
+        if (Utils.isFunction(then)) {
+          then.call(x, (value) => {
+            if (!isCalled) {
+              this.resolve(value);
+              isCalled = true;
+            }
+          }, (reason) => {
+            if (!isCalled) {
+              this.reject(reason);
+              isCalled = true;
+            }
+          });
+        } else {
+          this.fulfill(x);
+          isCalled = true;
+        }
+      } catch (e) {
+        if (!isCalled) {
+          this.reject(e);
+          isCalled = true;
+        }
+      }
+    } else {
+      this.fulfill(x);
+    }
+  }
+
   fulfill(value) {
     this.transition(VALIDATE_STATE.FULFILLED, value);
   }
