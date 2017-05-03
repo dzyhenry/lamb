@@ -97,18 +97,18 @@ npm install & npm run test
 
 
 ```javascript
-const resolve = (promise, x) => {
-  if (x === promise) {
+const resolve = (x) => {
+  if (x === this) {
     // 当需要resolve的x是当前promise的时候，直接reject，并抛出TypeError异常
     promise.transition(VALIDATE_STATE.REJECTED, new TypeError('The promise and its value refer to the same object.'));
   } else if (Utils.isPromise(x)) {
     // 当x的类型是promise且非当前promise时，根据x的state进行相应处理
     if (x.state === VALIDATE_STATE.PENDING) {
       // 若x的state为pending时，当前promise的resolve被延迟
-      x.then(value => resolve(promise, value), reason => promise.transition(VALIDATE_STATE.REJECTED, reason));
+      x.then(value => resolve(this, value), reason => this.transition(VALIDATE_STATE.REJECTED, reason));
     } else {
       // 若x的state为fulfilled或者rejected，则使用x的state和value应用于当前promise
-      promise.transition(x.state, x.value);
+      this.transition(x.state, x.value);
     }
   } else if (Utils.isObject(x) || Utils.isFunction(x)) {
     // 若x的类型为Ojbect或者function时(thenable)，检查该对象上是否有then方法
@@ -119,27 +119,27 @@ const resolve = (promise, x) => {
       if (Utils.isFunction(then)) {
         then.call(x, (value) => {
           if (!isCalled) {
-            resolve(promise, value);
+            resolve(this, value);
             isCalled = true;
           }
         }, (reason) => {
           if (!isCalled) {
-            promise.reject(reason);
+            this.reject(reason);
             isCalled = true;
           }
         });
       } else {
-        promise.fulfill(x);
+        this.fulfill(x);
         isCalled = true;
       }
     } catch (e) {
       if (!isCalled) {
-        promise.reject(e);
+        this.reject(e);
         isCalled = true;
       }
     }
   } else {
-    promise.fulfill(x);
+    this.fulfill(x);
   }
 };
 ```
