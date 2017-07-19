@@ -9,7 +9,7 @@ const VALIDATE_STATE = {
 
 const Utils = {
   runAsync: (fn) => {
-    setTimeout(fn, 0);
+    process.nextTick(fn);
   },
   isPromise: p => p && p instanceof Lamb,
   isObject: value => value && typeof value === 'object',
@@ -28,7 +28,7 @@ class Lamb {
       onFulfilled: null,
       onRejected: null,
     };
-    if (fn) {
+    if (typeof fn === 'function') {
       fn((value) => {
         this.resolve.call(this, value);
       }, (reason) => {
